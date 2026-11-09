@@ -1,122 +1,124 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider, CartProvider } from './context';
+import {
+  Button,
+  Card,
+  ErrorBoundary,
+  RhinoHeroIllustration,
+  ShopLayout,
+} from './components';
 
-function App() {
-  const [count, setCount] = useState(0)
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
+/**
+ * Vista previa del Hero y tarjetas de valor de "Shop Cart" (fiel al PDF de diseño)
+ * mientras se conectan las rutas completas en `src/routes/AppRoutes.tsx`.
+ */
+function HomePreview() {
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div>
+      {/* Hero Section idéntica a las páginas 1, 2 y 3 del PDF */}
+      <section className="relative overflow-hidden bg-white dark:bg-[#0B111E] transition-colors">
+        {/* Diagonal decorativa azul/roja de fondo en el extremo derecho */}
+        <div
+          className="hidden lg:block absolute inset-y-0 right-0 w-[48%] bg-sky-50/70 dark:bg-[#0E1E40]/65 -skew-x-12 translate-x-16 pointer-events-none"
+          aria-hidden="true"
+        />
+        <div
+          className="hidden lg:block absolute inset-y-0 right-0 w-7 bg-[#E31E24] -skew-x-12 translate-x-3 pointer-events-none"
+          aria-hidden="true"
+        />
 
-      <div className="ticks"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          {/* Columna Izquierda: Tipografía de alto impacto y CTAs */}
+          <div className="lg:col-span-6 space-y-6">
+            <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-extrabold tracking-tight leading-[1.08] text-[#0A2259] dark:text-white">
+              Todo lo que buscas
+              <span className="block text-[#E31E24]">con fuerza de</span>
+              <span className="block text-[#E31E24]">rinoceronte</span>
+            </h1>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
+            <p className="text-base sm:text-lg text-[#0A2259]/80 dark:text-slate-300 max-w-md leading-relaxed">
+              Tecnología, hogar, moda y mucho más en un solo lugar. Compra desde tu casa.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-4 pt-1">
+              <Button variant="primary" size="lg">
+                Ver ofertas
+              </Button>
+              <Button variant="secondary" size="lg">
+                Explorar todo
+              </Button>
+            </div>
+          </div>
+
+          {/* Columna Derecha: Ilustración del Rinoceronte con rampa roja y carrito */}
+          <div className="lg:col-span-6">
+            <RhinoHeroIllustration />
+          </div>
         </div>
       </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      {/* Franja divisoria diagonal tricolor (Rojo / Blanco / Navy) del PDF */}
+      <div className="shopcart-stripe-bar" />
+
+      {/* Tres tarjetas de propuesta de valor con borde superior de color (fiel al PDF) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card accent="blue" className="p-6">
+            <h2 className="text-lg font-extrabold text-[#0A2259] dark:text-white">
+              Envíos a todo el país
+            </h2>
+            <p className="text-sm text-[#0A2259]/75 dark:text-slate-400 mt-1">
+              Recibe tu pedido en la puerta de tu casa.
+            </p>
+          </Card>
+
+          <Card accent="red" className="p-6">
+            <h2 className="text-lg font-extrabold text-[#0A2259] dark:text-white">Pago seguro</h2>
+            <p className="text-sm text-[#0A2259]/75 dark:text-slate-400 mt-1">
+              Compra con confianza, siempre.
+            </p>
+          </Card>
+
+          <Card accent="navy" className="p-6">
+            <h2 className="text-lg font-extrabold text-[#0A2259] dark:text-white">
+              Devoluciones fáciles
+            </h2>
+            <p className="text-sm text-[#0A2259]/75 dark:text-slate-400 mt-1">
+              Si no te gusta, lo resolvemos.
+            </p>
+          </Card>
+        </div>
+      </section>
+    </div>
+  );
 }
 
-export default App
+export function App() {
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <AuthProvider>
+            <CartProvider>
+              <ShopLayout>
+                <HomePreview />
+              </ShopLayout>
+            </CartProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+}
+
+export default App;

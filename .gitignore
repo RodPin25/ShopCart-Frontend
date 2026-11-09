@@ -34,3 +34,5 @@ lerna-debug.log*
 # Local challenge docs & agent configs
 .agents/
 REQUIREMENTS.md
+CONTEXT.md
+.design
