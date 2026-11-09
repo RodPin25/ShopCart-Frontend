@@ -101,7 +101,7 @@ export const addressSchema = z.object({
     .max(255, 'La referencia no puede exceder 255 caracteres')
     .optional()
     .or(z.literal('')),
-  esPrincipal: z.boolean().default(false),
+  esPrincipal: z.boolean(),
 });
 
 export type AddressFormValues = z.infer<typeof addressSchema>;
@@ -145,13 +145,13 @@ export const categorySchema = z.object({
     .max(500, 'Máximo 500 caracteres')
     .optional()
     .or(z.literal('')),
-  activo: z.boolean().default(true),
+  activo: z.boolean(),
 });
 
 export type CategoryFormValues = z.infer<typeof categorySchema>;
 
 export const productSchema = z.object({
-  idCategoria: z.coerce.number().int().positive('Selecciona una categoría válida'),
+  idCategoria: z.number().int().positive('Selecciona una categoría válida'),
   nombreProducto: z
     .string()
     .trim()
@@ -179,15 +179,14 @@ export const variantSchema = z.object({
     .trim()
     .min(2, 'El nombre de la variante es obligatorio')
     .max(150, 'Máximo 150 caracteres'),
-  precio: z.coerce
+  precio: z
     .number()
     .positive('El precio en GTQ debe ser mayor a Q 0.00'),
-  stockInicial: z.coerce
+  stockInicial: z
     .number()
     .int('El stock inicial debe ser un número entero')
-    .min(0, 'El stock inicial no puede ser negativo')
-    .default(0),
-  activo: z.boolean().default(true),
+    .min(0, 'El stock inicial no puede ser negativo'),
+  activo: z.boolean(),
 });
 
 export type VariantFormValues = z.infer<typeof variantSchema>;
@@ -212,9 +211,9 @@ export type VariantAttributeFormValues = z.infer<typeof variantAttributeSchema>;
 // ============================================================================
 
 export const inventoryAdjustmentSchema = z.object({
-  idVariante: z.coerce.number().int().positive('Debes seleccionar una variante'),
+  idVariante: z.number().int().positive('Debes seleccionar una variante'),
   tipoMovimiento: z.enum(['AJUSTE_ENTRADA', 'AJUSTE_SALIDA']),
-  cantidad: z.coerce
+  cantidad: z
     .number()
     .int('La cantidad debe ser un número entero')
     .positive('La cantidad a ajustar debe ser mayor a 0'),
@@ -252,29 +251,24 @@ export const couponSchema = z
       .regex(/^[A-Za-z0-9-_]+$/, 'Solo letras, números y guiones sin espacios')
       .transform((val) => val.toUpperCase()),
     tipoDescuento: z.enum(['PORCENTAJE', 'MONTO_FIJO']),
-    valorDescuento: z.coerce
+    valorDescuento: z
       .number()
       .positive('El valor del descuento debe ser mayor a 0'),
-    montoMinimoCompra: z.coerce
+    montoMinimoCompra: z
       .number()
-      .min(0, 'El monto mínimo no puede ser negativo')
-      .default(0),
-    idCategoria: z.preprocess(
-      (val) => (val === '' || val === null || val === undefined || Number(val) === 0 ? null : Number(val)),
-      z.number().int().positive().nullable()
-    ),
+      .min(0, 'El monto mínimo no puede ser negativo'),
+    idCategoria: z.number().int().nonnegative().nullable().optional(),
     fechaInicio: z.string().min(1, 'La fecha de inicio es obligatoria'),
-    fechaFin: z.string().min(1, 'La fecha de fin es obligatoria'),
-    limiteUsosTotal: z.coerce
+    fechaFin: z.string().min(1, 'La fecha de fin debe tener valor'),
+    limiteUsosTotal: z
       .number()
       .int()
       .positive('El límite total de usos debe ser al menos 1'),
-    limiteUsosPorCliente: z.coerce
+    limiteUsosPorCliente: z
       .number()
       .int()
-      .positive('El límite por cliente debe ser al menos 1')
-      .default(1),
-    activo: z.boolean().default(true),
+      .positive('El límite por cliente debe ser al menos 1'),
+    activo: z.boolean(),
   })
   .refine(
     (data) => {
@@ -303,10 +297,8 @@ export type CouponFormValues = z.infer<typeof couponSchema>;
 // ============================================================================
 
 export const checkoutSchema = z.object({
-  idDireccion: z.coerce.number().int().positive('Debes seleccionar una dirección de entrega'),
-  metodoPago: z
-    .enum(['TARJETA', 'TARJETA_CREDITO', 'TARJETA_DEBITO', 'TRANSFERENCIA_BANCARIA'])
-    .default('TARJETA'),
+  idDireccion: z.number().int().positive('Debes seleccionar una dirección de entrega'),
+  metodoPago: z.enum(['TARJETA', 'TARJETA_CREDITO', 'TARJETA_DEBITO', 'TRANSFERENCIA_BANCARIA']),
   codigoCupon: z.string().trim().optional(),
   transaccionId: z.string().trim().optional(),
 });
@@ -331,7 +323,7 @@ export const changeOrderStatusSchema = z.object({
 export type ChangeOrderStatusFormValues = z.infer<typeof changeOrderStatusSchema>;
 
 export const requestReturnSchema = z.object({
-  idPedido: z.coerce.number().int().positive(),
+  idPedido: z.number().int().positive(),
   motivo: z
     .string()
     .trim()

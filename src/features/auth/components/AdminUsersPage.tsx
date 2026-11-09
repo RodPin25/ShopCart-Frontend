@@ -319,15 +319,12 @@ export function AdminUsersPage() {
         <form onSubmit={form.handleSubmit(onSubmitCreate)} className="space-y-4">
           <Select
             label="Rol del usuario"
-            value={form.watch('idRol')}
-            onChange={(e) =>
-              form.setValue('idRol', Number(e.target.value) as RoleId, { shouldValidate: true })
-            }
             options={[
               { value: ROLE_IDS.OPERADOR, label: 'Operador (Pedidos, Devoluciones e Inventario)' },
               { value: ROLE_IDS.ADMIN, label: 'Administrador (Control Total)' },
               { value: ROLE_IDS.CLIENTE, label: 'Cliente (Tienda)' },
             ]}
+            {...form.register('idRol', { valueAsNumber: true })}
           />
 
           <Input
