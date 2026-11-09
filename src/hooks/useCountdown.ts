@@ -86,7 +86,7 @@ export function useCountdown({
         window.clearInterval(intervalId);
         onExpireRef.current?.();
       }
-    }, 1000);
+    }, 250);
 
     return () => {
       window.clearInterval(intervalId);

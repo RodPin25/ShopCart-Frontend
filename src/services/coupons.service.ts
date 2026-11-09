@@ -2,12 +2,77 @@ import { apiClient, getOrCreateGuestToken, type ApiResponse } from './api.client
 import { API_ENDPOINTS } from './endpoints';
 import type {
   Coupon,
+  CouponDetailData,
   CouponFilters,
   CouponPayload,
+  CouponUsageItem,
   CouponValidationData,
+  DiscountType,
   PaginatedData,
   ValidateCouponPayload,
 } from '../types';
+
+function normalizeCoupon(raw: Record<string, unknown>): Coupon {
+  const limiteTotal = Number(raw.LimiteUsosTotal ?? 0);
+  const usosActuales = Number(raw.UsosActuales ?? 0);
+  const fechaInicio = String(raw.FechaInicio ?? new Date().toISOString());
+  const fechaFin = String(raw.FechaFin ?? new Date().toISOString());
+  const activo = Boolean(raw.Activo ?? true);
+
+  const nowMs = Date.now();
+  const isDateValid =
+    Date.parse(fechaInicio) <= nowMs && Date.parse(fechaFin) >= nowMs;
+  const computedVigente =
+    raw.Vigente !== undefined
+      ? Boolean(raw.Vigente)
+      : raw.EstaVigente !== undefined
+        ? Boolean(raw.EstaVigente)
+        : activo && isDateValid && usosActuales < limiteTotal;
+
+  return {
+    IDCupon: Number(raw.IDCupon ?? 0),
+    Codigo: String(raw.Codigo ?? ''),
+    TipoDescuento:
+      ((raw.TipoDescuento as DiscountType | undefined) ?? 'PORCENTAJE'),
+    ValorDescuento: Number(raw.ValorDescuento ?? 0),
+    MontoMinimoCompra: Number(raw.MontoMinimoCompra ?? 0),
+    IDCategoria:
+      raw.IDCategoria !== undefined && raw.IDCategoria !== null
+        ? Number(raw.IDCategoria)
+        : null,
+    NombreCategoria:
+      (raw.NombreCategoria as string | null | undefined) ?? null,
+    FechaInicio: fechaInicio,
+    FechaFin: fechaFin,
+    LimiteUsosTotal: limiteTotal,
+    UsosActuales: usosActuales,
+    UsosRestantes:
+      raw.UsosRestantes !== undefined
+        ? Number(raw.UsosRestantes)
+        : Math.max(0, limiteTotal - usosActuales),
+    LimiteUsosPorCliente:
+      raw.LimiteUsosPorCliente !== undefined && raw.LimiteUsosPorCliente !== null
+        ? Number(raw.LimiteUsosPorCliente)
+        : 1,
+    Activo: activo,
+    Vigente: computedVigente,
+  };
+}
+
+function normalizeCouponUsage(raw: Record<string, unknown>): CouponUsageItem {
+  return {
+    IDCuponUso: Number(raw.IDCuponUso ?? 0),
+    IDCupon: Number(raw.IDCupon ?? 0),
+    IDUsuario: Number(raw.IDUsuario ?? 0),
+    NombreCliente: String(raw.NombreCliente ?? ''),
+    CorreoCliente: String(raw.CorreoCliente ?? ''),
+    IDPedido: Number(raw.IDPedido ?? 0),
+    SubtotalPedido: Number(raw.SubtotalPedido ?? 0),
+    MontoDescuento: Number(raw.MontoDescuento ?? 0),
+    TotalPedido: Number(raw.TotalPedido ?? 0),
+    FechaUso: String(raw.FechaUso ?? new Date().toISOString()),
+  };
+}
 
 /**
  * Servicio modular de Cupones y Promociones (RF-05).
@@ -19,17 +84,37 @@ export const couponsService = {
    * Rechaza con mensaje específico si venció, agotó usos o no cumple el monto mínimo.
    */
   async validateCoupon(
-    payload: ValidateCouponPayload
+    payload: ValidateCouponPayload,
   ): Promise<CouponValidationData> {
     const tokenInvitado = payload.tokenInvitado ?? getOrCreateGuestToken();
-    const { data } = await apiClient.post<ApiResponse<CouponValidationData>>(
+    const { data } = await apiClient.post<ApiResponse<Record<string, unknown>>>(
       API_ENDPOINTS.COUPONS.VALIDATE,
       {
         codigo: payload.codigo.trim().toUpperCase(),
         tokenInvitado,
-      }
+      },
     );
-    return data.data;
+
+    const raw = data.data ?? {};
+    return {
+      valido: Boolean(raw.valido ?? raw.EsValido),
+      mensaje: String(
+        raw.mensaje ?? raw.MensajeValidacion ?? 'Validación de cupón completada.',
+      ),
+      idCupon: raw.idCupon !== undefined ? Number(raw.idCupon) : raw.IDCupon !== undefined ? Number(raw.IDCupon) : undefined,
+      codigo: (raw.codigo as string | undefined) ?? (raw.Codigo as string | undefined),
+      tipoDescuento:
+        ((raw.tipoDescuento ?? raw.TipoDescuento) as DiscountType | undefined) ?? undefined,
+      valorDescuento:
+        raw.valorDescuento !== undefined
+          ? Number(raw.valorDescuento)
+          : raw.ValorDescuento !== undefined
+            ? Number(raw.ValorDescuento)
+            : undefined,
+      subtotalCarrito: Number(raw.subtotalCarrito ?? raw.SubtotalCarrito ?? 0),
+      montoDescuento: Number(raw.montoDescuento ?? raw.MontoDescuento ?? 0),
+      nuevoTotal: Number(raw.nuevoTotal ?? raw.TotalConDescuento ?? 0),
+    };
   },
 
   /**
@@ -37,11 +122,11 @@ export const couponsService = {
    * Lista cupones con paginación y filtros (SP_Cupones_Listar - Solo Admin).
    */
   async listCoupons(
-    filters: CouponFilters = {}
+    filters: CouponFilters = {},
   ): Promise<PaginatedData<Coupon>> {
     const { data } = await apiClient.get<ApiResponse<PaginatedData<Coupon>>>(
       API_ENDPOINTS.COUPONS.BASE,
-      { params: filters }
+      { params: filters },
     );
     return data.data;
   },
@@ -54,7 +139,7 @@ export const couponsService = {
     const { data } = await apiClient.get<
       ApiResponse<{ cupon?: Coupon } & Partial<Coupon>>
     >(API_ENDPOINTS.COUPONS.BY_ID(idCupon));
-    return (data.data.cupon ?? (data.data as unknown as Coupon));
+    return data.data.cupon ?? (data.data as unknown as Coupon);
   },
 
   /**
@@ -64,7 +149,7 @@ export const couponsService = {
   async createCoupon(payload: CouponPayload): Promise<Coupon> {
     const { data } = await apiClient.post<ApiResponse<Coupon>>(
       API_ENDPOINTS.COUPONS.BASE,
-      payload
+      payload,
     );
     return data.data;
   },
@@ -76,7 +161,7 @@ export const couponsService = {
   async updateCoupon(idCupon: number, payload: CouponPayload): Promise<Coupon> {
     const { data } = await apiClient.put<ApiResponse<Coupon>>(
       API_ENDPOINTS.COUPONS.BY_ID(idCupon),
-      payload
+      payload,
     );
     return data.data;
   },
@@ -88,7 +173,7 @@ export const couponsService = {
   async changeCouponStatus(idCupon: number, activo: boolean): Promise<Coupon> {
     const { data } = await apiClient.patch<ApiResponse<Coupon>>(
       API_ENDPOINTS.COUPONS.STATUS(idCupon),
-      { activo }
+      { activo },
     );
     return data.data;
   },
