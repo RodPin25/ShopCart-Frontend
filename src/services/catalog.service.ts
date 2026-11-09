@@ -197,11 +197,28 @@ export const catalogService = {
     idVariante?: number;
     idProducto?: number;
   }): Promise<PriceHistoryItem[]> {
-    const { data } = await apiClient.get<ApiResponse<PriceHistoryItem[]>>(
+    const { data } = await apiClient.get<ApiResponse<Array<Record<string, unknown>>>>(
       API_ENDPOINTS.CATALOG.PRICE_HISTORY,
       { params }
     );
-    return data.data;
+    const rawList = Array.isArray(data.data) ? data.data : [];
+    return rawList.map((item) => ({
+      IDHistorialPrecio: Number(item.IDHistorialPrecio ?? 0),
+      IDVariante: Number(item.IDVariante ?? 0),
+      SKU: String(item.SKU ?? ''),
+      NombreVariante: String(item.NombreVariante ?? ''),
+      IDProducto: Number(item.IDProducto ?? 0),
+      NombreProducto: String(item.NombreProducto ?? ''),
+      PrecioAnterior: Number(item.PrecioAnterior ?? 0),
+      PrecioNuevo: Number(item.PrecioNuevo ?? 0),
+      IDUsuarioModifico: Number(item.IDUsuarioModifico ?? item.IDUsuario ?? 0),
+      NombreUsuarioModifico:
+        (item.NombreUsuarioModifico as string | undefined) ??
+        (item.ModificadoPor as string | undefined),
+      FechaCambio: String(
+        item.FechaCambio ?? item.FechaModificacion ?? new Date().toISOString()
+      ),
+    }));
   },
 };
 

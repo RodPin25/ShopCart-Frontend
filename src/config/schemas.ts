@@ -220,8 +220,8 @@ export const inventoryAdjustmentSchema = z.object({
   motivo: z
     .string()
     .trim()
-    .min(5, 'El motivo del ajuste es obligatorio (mínimo 5 caracteres)')
-    .max(300, 'El motivo no puede exceder 300 caracteres'),
+    .min(3, 'El motivo del ajuste es obligatorio (mínimo 3 caracteres)')
+    .max(250, 'El motivo no puede exceder 250 caracteres'),
 });
 
 export type InventoryAdjustmentFormValues = z.infer<typeof inventoryAdjustmentSchema>;

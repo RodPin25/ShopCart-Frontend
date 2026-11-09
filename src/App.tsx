@@ -26,6 +26,12 @@ import {
 } from './features/catalog';
 import { CartDrawer, CartPage } from './features/cart';
 import { CheckoutPage } from './features/checkout';
+import {
+  AdminOrdersPage,
+  CustomerOrderDetailPage,
+  CustomerOrdersPage,
+} from './features/orders';
+import { AdminInventoryPage } from './features/inventory';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -110,6 +116,22 @@ export function App() {
                     }
                   />
                   <Route
+                    path="/mis-pedidos"
+                    element={
+                      <RequireSession>
+                        <CustomerOrdersPage />
+                      </RequireSession>
+                    }
+                  />
+                  <Route
+                    path="/mis-pedidos/:idPedido"
+                    element={
+                      <RequireSession>
+                        <CustomerOrderDetailPage />
+                      </RequireSession>
+                    }
+                  />
+                  <Route
                     path="/mi-perfil"
                     element={
                       <RequireSession>
@@ -128,7 +150,9 @@ export function App() {
                     </RequireSession>
                   }
                 >
-                  <Route index element={<Navigate to="/admin/catalogo" replace />} />
+                  <Route index element={<Navigate to="/admin/pedidos" replace />} />
+                  <Route path="pedidos" element={<AdminOrdersPage />} />
+                  <Route path="inventario" element={<AdminInventoryPage />} />
                   <Route
                     path="catalogo"
                     element={

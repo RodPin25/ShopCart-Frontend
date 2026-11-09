@@ -593,16 +593,26 @@ export function CheckoutPage() {
           </div>
           <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
             El tiempo de reserva de 15 minutos concluyó y las unidades apartadas fueron liberadas
-            para otros clientes. Te devolveremos a tu carrito para verificar la disponibilidad
-            actual.
+            para otros clientes. Puedes renovar tu reserva por otros 15 minutos si aún hay stock
+            disponible o volver a tu carrito.
           </p>
-          <Button
-            variant="primary"
-            fullWidth
-            onClick={() => navigate('/carrito', { replace: true })}
-          >
-            Volver al carrito de compras
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3 pt-1">
+            <Button
+              variant="secondary"
+              fullWidth
+              onClick={() => navigate('/carrito', { replace: true })}
+            >
+              Volver al carrito
+            </Button>
+            <Button
+              variant="primary"
+              fullWidth
+              isLoading={isReserving}
+              onClick={() => void retryReservation()}
+            >
+              Renovar reserva (15 min)
+            </Button>
+          </div>
         </div>
       </Modal>
     </div>

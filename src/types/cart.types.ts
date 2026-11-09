@@ -80,10 +80,29 @@ export interface Coupon {
   FechaFin: string;
   LimiteUsosTotal: number;
   UsosActuales: number;
+  UsosRestantes?: number;
   LimiteUsosPorCliente: number | null;
   Activo: boolean;
   Vigente?: boolean;
   FechaCreacion?: string;
+}
+
+export interface CouponUsageItem {
+  IDCuponUso: number;
+  IDCupon: number;
+  IDUsuario: number;
+  NombreCliente: string;
+  CorreoCliente: string;
+  IDPedido: number;
+  SubtotalPedido: number;
+  MontoDescuento: number;
+  TotalPedido: number;
+  FechaUso: string;
+}
+
+export interface CouponDetailData {
+  cupon: Coupon;
+  historialUsos: CouponUsageItem[];
 }
 
 export interface ValidateCouponPayload {

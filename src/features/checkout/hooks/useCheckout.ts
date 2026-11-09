@@ -24,10 +24,8 @@ export function useCheckout() {
     generateUniqueKey('chk'),
   );
 
-  const [reservationExpiresAt, setReservationExpiresAt] = useState<string | null>(() => {
-    if (typeof window === 'undefined') return null;
-    return window.sessionStorage.getItem(STORAGE_KEYS.CHECKOUT_RESERVATION_EXPIRES_AT);
-  });
+  // Cada ingreso al Checkout inicia una nueva ventana de reserva de 15 minutos
+  const [reservationExpiresAt, setReservationExpiresAt] = useState<string | null>(null);
 
   const [isExpiredModalOpen, setIsExpiredModalOpen] = useState<boolean>(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
@@ -41,7 +39,8 @@ export function useCheckout() {
 
   // Candado síncrono contra doble clic en el mismo frame antes del re-render de React
   const inFlightPaymentRef = useRef<boolean>(false);
-  const hasRequestedReservationRef = useRef<boolean>(false);
+  // Guarda el último IDCarrito reservado en esta instancia de Checkout para reiniciar si cambia de carrito
+  const reservedCartIdRef = useRef<number | null>(null);
 
   const handleReservationExpired = useCallback(() => {
     if (completedOrder) return;
@@ -62,7 +61,15 @@ export function useCheckout() {
       const fallbackExpiration = new Date(
         Date.now() + ENV.RESERVATION_TTL_MINUTES * 60 * 1000,
       ).toISOString();
-      const targetIso = reservation?.fechaExpiracion ?? fallbackExpiration;
+
+      const parsedServerExp = reservation?.fechaExpiracion
+        ? Date.parse(reservation.fechaExpiracion)
+        : Number.NaN;
+
+      const targetIso =
+        !Number.isNaN(parsedServerExp) && parsedServerExp > Date.now()
+          ? reservation.fechaExpiracion!
+          : fallbackExpiration;
 
       window.sessionStorage.setItem(STORAGE_KEYS.CHECKOUT_RESERVATION_EXPIRES_AT, targetIso);
       setReservationExpiresAt(targetIso);
@@ -77,34 +84,30 @@ export function useCheckout() {
     if (!idCarrito || cartContext.items.length === 0) {
       return;
     }
+    setIsExpiredModalOpen(false);
+    reservedCartIdRef.current = idCarrito;
     await reserveMutation.mutateAsync(idCarrito);
   }, [cartContext.cart?.IDCarrito, cartContext.items.length, reserveMutation]);
 
-  // Iniciar reserva automáticamente al entrar al Checkout con ítems válidos
+  // Iniciar o renovar reserva de 15 minutos cada vez que se entra al Checkout o cambia el carrito activo
   useEffect(() => {
     const idCarrito = cartContext.cart?.IDCarrito;
     if (
-      hasRequestedReservationRef.current ||
       !idCarrito ||
       cartContext.items.length === 0 ||
-      completedOrder
+      completedOrder ||
+      reservedCartIdRef.current === idCarrito
     ) {
       return;
     }
 
-    // Si ya hay una reserva activa y vigente en sessionStorage, conservarla
-    if (reservationExpiresAt && Date.parse(reservationExpiresAt) > Date.now()) {
-      hasRequestedReservationRef.current = true;
-      return;
-    }
-
-    hasRequestedReservationRef.current = true;
+    window.sessionStorage.removeItem(STORAGE_KEYS.CHECKOUT_RESERVATION_EXPIRES_AT);
+    reservedCartIdRef.current = idCarrito;
     triggerReserve(idCarrito);
   }, [
     cartContext.cart?.IDCarrito,
     cartContext.items.length,
     completedOrder,
-    reservationExpiresAt,
     triggerReserve,
   ]);
 
