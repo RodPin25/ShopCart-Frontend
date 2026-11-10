@@ -13,6 +13,8 @@ export type {
   UpdateVariantPayload,
   VariantAttribute,
   VariantAttributePayload,
+  VariantImage,
+  VariantImagePayload,
 } from '../../types';
 
 export type {

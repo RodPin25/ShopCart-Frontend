@@ -255,12 +255,14 @@ export function AdminCatalogPage() {
   const handleOpenVariantModal = (variant?: ProductVariant) => {
     setFeedback(null);
     if (variant) {
+      const existingUrls = variant.imagenes?.map((img) => img.UrlImagen).join('\n') ?? '';
       variantForm.reset({
         sku: variant.SKU,
         nombreVariante: variant.NombreVariante,
         precio: variant.Precio,
         stockInicial: variant.StockFisico,
         activo: variant.Activo,
+        imagenesUrls: existingUrls,
       });
       variantModal.open(variant);
     } else {
@@ -270,6 +272,7 @@ export function AdminCatalogPage() {
         precio: 100,
         stockInicial: 0,
         activo: true,
+        imagenesUrls: '',
       });
       variantModal.open();
     }
@@ -294,6 +297,13 @@ export function AdminCatalogPage() {
           message: 'Variante actualizada (cambio auditado en Historial de Precios).',
         });
       } else {
+        const rawUrls = values.imagenesUrls
+          ? values.imagenesUrls
+              .split('\n')
+              .map((u) => u.trim())
+              .filter((u) => u.length > 0)
+          : [];
+
         await createVariant({
           idProducto: selectedProductIdForDetail,
           payload: {
@@ -301,9 +311,10 @@ export function AdminCatalogPage() {
             nombreVariante: values.nombreVariante.trim(),
             precio: values.precio,
             stockInicial: values.stockInicial ?? 0,
+            imagenes: rawUrls.length > 0 ? rawUrls : undefined,
           },
         });
-        setFeedback({ type: 'success', message: 'Nueva variante creada en el producto.' });
+        setFeedback({ type: 'success', message: 'Nueva variante con galería creada en el producto.' });
       }
       variantModal.close();
     } catch (err) {
@@ -593,13 +604,26 @@ export function AdminCatalogPage() {
                   {selectedProductDetail.variantes.map((v) => (
                     <Card key={v.IDVariante} className="space-y-3 bg-slate-50/60 dark:bg-[#0D1525]">
                       <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <span className="font-mono text-xs font-bold text-[#E31E24]">
-                            SKU: {v.SKU}
-                          </span>
-                          <h4 className="font-extrabold text-[#0A2259] dark:text-white">
-                            {v.NombreVariante}
-                          </h4>
+                        <div className="flex items-start gap-3">
+                          {v.ImagenPrincipal ? (
+                            <img
+                              src={v.ImagenPrincipal}
+                              alt={v.NombreVariante}
+                              className="w-12 h-12 object-cover rounded-lg border border-slate-200 dark:border-[#1E2D4A] shrink-0"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-xs text-slate-500 shrink-0">
+                              SKU
+                            </div>
+                          )}
+                          <div>
+                            <span className="font-mono text-xs font-bold text-[#E31E24]">
+                              SKU: {v.SKU}
+                            </span>
+                            <h4 className="font-extrabold text-[#0A2259] dark:text-white">
+                              {v.NombreVariante}
+                            </h4>
+                          </div>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Badge variant={v.Activo ? 'success' : 'danger'}>
@@ -939,6 +963,22 @@ export function AdminCatalogPage() {
               />
             )}
           </div>
+          {!variantModal.data && (
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                Imágenes de la variante (URLs separadas por salto de línea)
+              </label>
+              <textarea
+                rows={3}
+                placeholder="https://images.unsplash.com/foto1.jpg&#10;https://images.unsplash.com/foto2.jpg"
+                className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-[#1E2D4A] bg-white dark:bg-[#0D1525] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#E31E24]"
+                {...variantForm.register('imagenesUrls')}
+              />
+              <p className="text-[11px] text-slate-400">
+                La primera imagen será asignada automáticamente como portada principal.
+              </p>
+            </div>
+          )}
           {variantModal.data && (
             <label className="flex items-center gap-2 cursor-pointer">
               <input

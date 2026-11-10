@@ -188,6 +188,7 @@ export const variantSchema = z.object({
     .min(0, 'El stock inicial no puede ser negativo')
     .optional(),
   activo: z.boolean(),
+  imagenesUrls: z.string().optional(),
 });
 
 export type VariantFormValues = z.infer<typeof variantSchema>;
