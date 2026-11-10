@@ -36,6 +36,7 @@ export interface ProductListItem {
   PrecioDesdeIVA: number;
   StockFisicoTotal: number;
   StockDisponibleTotal: number;
+  ImagenPortada?: string | null;
   TieneDisponibilidad: boolean;
 }
 
@@ -48,6 +49,21 @@ export interface VariantAttribute {
   Clave: string;
   Valor: string;
   Activo: boolean;
+}
+
+export interface VariantImage {
+  IDVarianteImagen: number;
+  IDVariante: number;
+  UrlImagen: string;
+  EsPrincipal: boolean;
+  Orden: number;
+  Activo: boolean;
+}
+
+export interface VariantImagePayload {
+  urlImagen: string;
+  esPrincipal?: boolean;
+  orden?: number;
 }
 
 /**
@@ -64,8 +80,10 @@ export interface ProductVariant {
   StockFisico: number;
   StockReservado: number;
   StockDisponible: number;
+  ImagenPrincipal?: string | null;
   Activo: boolean;
   atributos: VariantAttribute[];
+  imagenes?: VariantImage[];
 }
 
 /**
@@ -126,6 +144,7 @@ export interface CreateVariantPayload {
   nombreVariante: string;
   precio: number;
   stockInicial?: number;
+  imagenes?: Array<string | VariantImagePayload>;
 }
 
 export interface UpdateVariantPayload {

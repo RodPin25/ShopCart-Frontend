@@ -78,8 +78,11 @@ export interface DashboardKPIs {
   VentasBrutasGTQ: number;
   TotalDevolucionesGTQ: number;
   VentasNetasGTQ: number;
+  VentaNetaSinIVAGTQ?: number;
+  MontoIVANetoGTQ?: number;
   TotalPedidosCompletados: number;
   PedidosCancelados: number;
+  UnidadesNetasVendidas?: number;
   TicketPromedioGTQ: number;
   CarritosAbandonadosCount: number;
   MontoPotencialAbandonadoGTQ: number;
@@ -115,6 +118,8 @@ export interface TopProductItem {
   SKU?: string;
   NombreVariante?: string;
   NombreCategoria: string;
+  UnidadesBrutasVendidas?: number;
+  UnidadesDevueltas?: number;
   UnidadesNetasVendidas: number;
   IngresosNetosGTQ: number;
   TotalPedidos: number;
@@ -131,6 +136,7 @@ export interface AbandonedCartItem {
   MontoPotencialGTQ: number;
   UltimaActividad: string;
   MinutosInactivo: number;
+  HorasInactividad?: number;
 }
 
 export interface ReportDateRangeParams {
@@ -152,6 +158,7 @@ export interface AuditLogItem {
   IDUsuario: number | null;
   NombreUsuario?: string | null;
   CorreoUsuario?: string | null;
+  RolUsuario?: string | null;
   DireccionIP?: string | null;
   FechaEvento: string;
 }

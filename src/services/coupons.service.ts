@@ -124,11 +124,15 @@ export const couponsService = {
   async listCoupons(
     filters: CouponFilters = {},
   ): Promise<PaginatedData<Coupon>> {
-    const { data } = await apiClient.get<ApiResponse<PaginatedData<Coupon>>>(
-      API_ENDPOINTS.COUPONS.BASE,
-      { params: filters },
-    );
-    return data.data;
+    const { data } = await apiClient.get<
+      ApiResponse<PaginatedData<Record<string, unknown>>>
+    >(API_ENDPOINTS.COUPONS.BASE, { params: filters });
+    const rawPaginated = data.data;
+    const rawItems = Array.isArray(rawPaginated?.items) ? rawPaginated.items : [];
+    return {
+      ...rawPaginated,
+      items: rawItems.map((item) => normalizeCoupon(item)),
+    };
   },
 
   /**
@@ -136,10 +140,31 @@ export const couponsService = {
    * Obtiene el detalle de un cupón y su historial de usos (SP_Cupones_ObtenerPorID - Solo Admin).
    */
   async getCouponById(idCupon: number): Promise<Coupon> {
-    const { data } = await apiClient.get<
-      ApiResponse<{ cupon?: Coupon } & Partial<Coupon>>
-    >(API_ENDPOINTS.COUPONS.BY_ID(idCupon));
-    return data.data.cupon ?? (data.data as unknown as Coupon);
+    const detail = await this.getCouponDetail(idCupon);
+    return detail.cupon;
+  },
+
+  /**
+   * GET /api/coupons/{idCupon}
+   * Obtiene el cupón junto con su historial de usos por cliente y pedido (`SP_Cupones_ObtenerPorID`).
+   */
+  async getCouponDetail(idCupon: number): Promise<CouponDetailData> {
+    const { data } = await apiClient.get<ApiResponse<Record<string, unknown>>>(
+      API_ENDPOINTS.COUPONS.BY_ID(idCupon),
+    );
+    const raw = data.data ?? {};
+    const rawCupon =
+      raw.cupon && typeof raw.cupon === 'object'
+        ? (raw.cupon as Record<string, unknown>)
+        : raw;
+    const rawUsages = Array.isArray(raw.historialUsos) ? raw.historialUsos : [];
+
+    return {
+      cupon: normalizeCoupon(rawCupon),
+      historialUsos: rawUsages.map((u) =>
+        normalizeCouponUsage(u as Record<string, unknown>),
+      ),
+    };
   },
 
   /**
@@ -147,11 +172,11 @@ export const couponsService = {
    * Crea un cupón de descuento por porcentaje o monto fijo (SP_Cupones_Crear - Solo Admin).
    */
   async createCoupon(payload: CouponPayload): Promise<Coupon> {
-    const { data } = await apiClient.post<ApiResponse<Coupon>>(
+    const { data } = await apiClient.post<ApiResponse<Record<string, unknown>>>(
       API_ENDPOINTS.COUPONS.BASE,
       payload,
     );
-    return data.data;
+    return normalizeCoupon(data.data ?? {});
   },
 
   /**
@@ -159,11 +184,11 @@ export const couponsService = {
    * Actualiza un cupón existente (SP_Cupones_Actualizar - Solo Admin).
    */
   async updateCoupon(idCupon: number, payload: CouponPayload): Promise<Coupon> {
-    const { data } = await apiClient.put<ApiResponse<Coupon>>(
+    const { data } = await apiClient.put<ApiResponse<Record<string, unknown>>>(
       API_ENDPOINTS.COUPONS.BY_ID(idCupon),
       payload,
     );
-    return data.data;
+    return normalizeCoupon(data.data ?? {});
   },
 
   /**
@@ -171,11 +196,11 @@ export const couponsService = {
    * Activa o desactiva un cupón (SP_Cupones_CambiarEstadoActivo - Solo Admin).
    */
   async changeCouponStatus(idCupon: number, activo: boolean): Promise<Coupon> {
-    const { data } = await apiClient.patch<ApiResponse<Coupon>>(
+    const { data } = await apiClient.patch<ApiResponse<Record<string, unknown>>>(
       API_ENDPOINTS.COUPONS.STATUS(idCupon),
       { activo },
     );
-    return data.data;
+    return normalizeCoupon(data.data ?? {});
   },
 };
 

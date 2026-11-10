@@ -55,6 +55,16 @@ export function ProductDetailPage() {
     message: string;
   } | null>(null);
 
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  const images = selectedVariant?.imagenes && selectedVariant.imagenes.length > 0
+    ? selectedVariant.imagenes
+    : selectedVariant?.ImagenPrincipal
+    ? [{ IDVarianteImagen: 0, IDVariante: selectedVariant.IDVariante, UrlImagen: selectedVariant.ImagenPrincipal, EsPrincipal: true, Orden: 1, Activo: true }]
+    : [];
+
+  const currentImageUrl = images[activeImageIndex]?.UrlImagen ?? selectedVariant?.ImagenPrincipal;
+
   if (isLoading) {
     return <PageLoader label="Cargando detalles y variantes del producto..." />;
   }
@@ -136,16 +146,53 @@ export function ProductDetailPage() {
               )}
             </div>
 
-            <div className="py-12 rounded-2xl bg-slate-100 dark:bg-[#0D1525] border border-slate-200 dark:border-[#1E2D4A] flex flex-col items-center justify-center gap-3">
-              <div className="w-24 h-24 rounded-3xl bg-[#0A2259] dark:bg-[#E31E24] text-white flex items-center justify-center text-3xl font-extrabold shadow-lg">
-                {product.NombreProducto.slice(0, 2).toUpperCase()}
-              </div>
-              {selectedVariant && (
-                <p className="text-sm font-bold text-[#0A2259] dark:text-white px-4">
-                  {selectedVariant.NombreVariante}
-                </p>
+            <div className="rounded-2xl overflow-hidden bg-slate-100 dark:bg-[#0D1525] border border-slate-200 dark:border-[#1E2D4A] flex flex-col items-center justify-center">
+              {currentImageUrl ? (
+                <div className="relative aspect-square w-full bg-slate-100 dark:bg-[#0D1525]">
+                  <img
+                    src={currentImageUrl}
+                    alt={selectedVariant?.NombreVariante ?? product.NombreProducto}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="py-12 flex flex-col items-center justify-center gap-3">
+                  <div className="w-24 h-24 rounded-3xl bg-[#0A2259] dark:bg-[#E31E24] text-white flex items-center justify-center text-3xl font-extrabold shadow-lg">
+                    {product.NombreProducto.slice(0, 2).toUpperCase()}
+                  </div>
+                  {selectedVariant && (
+                    <p className="text-sm font-bold text-[#0A2259] dark:text-white px-4">
+                      {selectedVariant.NombreVariante}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
+
+            {/* Miniaturas de galería si hay más de 1 imagen */}
+            {images.length > 1 && (
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                {images.map((img, idx) => (
+                  <button
+                    key={img.IDVarianteImagen || idx}
+                    type="button"
+                    onClick={() => setActiveImageIndex(idx)}
+                    className={clsx(
+                      'w-14 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer',
+                      activeImageIndex === idx
+                        ? 'border-[#E31E24] ring-2 ring-[#E31E24]/20'
+                        : 'border-slate-200 dark:border-[#1E2D4A] opacity-70 hover:opacity-100',
+                    )}
+                  >
+                    <img
+                      src={img.UrlImagen}
+                      alt={`Miniatura ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="flex items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400">
               <ShieldCheck className="w-4 h-4 text-[#E31E24]" />
@@ -240,7 +287,10 @@ export function ProductDetailPage() {
                   <button
                     key={variant.IDVariante}
                     type="button"
-                    onClick={() => selectVariant(variant.IDVariante)}
+                    onClick={() => {
+                      selectVariant(variant.IDVariante);
+                      setActiveImageIndex(0);
+                    }}
                     className={clsx(
                       'text-left p-3.5 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between gap-2',
                       isSelected
@@ -250,11 +300,20 @@ export function ProductDetailPage() {
                     )}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-extrabold text-[#0A2259] dark:text-white">
-                          {variant.NombreVariante}
-                        </p>
-                        <p className="font-mono text-[11px] text-slate-400">SKU: {variant.SKU}</p>
+                      <div className="flex items-center gap-2.5">
+                        {variant.ImagenPrincipal && (
+                          <img
+                            src={variant.ImagenPrincipal}
+                            alt={variant.NombreVariante}
+                            className="w-10 h-10 object-cover rounded-md border border-slate-200 dark:border-[#1E2D4A] shrink-0"
+                          />
+                        )}
+                        <div>
+                          <p className="text-sm font-extrabold text-[#0A2259] dark:text-white">
+                            {variant.NombreVariante}
+                          </p>
+                          <p className="font-mono text-[11px] text-slate-400">SKU: {variant.SKU}</p>
+                        </div>
                       </div>
                       {isSelected && (
                         <span className="w-5 h-5 rounded-full bg-[#E31E24] text-white flex items-center justify-center shrink-0">

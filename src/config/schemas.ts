@@ -185,8 +185,10 @@ export const variantSchema = z.object({
   stockInicial: z
     .number()
     .int('El stock inicial debe ser un número entero')
-    .min(0, 'El stock inicial no puede ser negativo'),
+    .min(0, 'El stock inicial no puede ser negativo')
+    .optional(),
   activo: z.boolean(),
+  imagenesUrls: z.string().optional(),
 });
 
 export type VariantFormValues = z.infer<typeof variantSchema>;

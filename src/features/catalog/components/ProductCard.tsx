@@ -33,19 +33,37 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        {/* Ilustración / Placeholder estilizado con identidad de marca */}
+        {/* Imagen de Portada o Placeholder estilizado con identidad de marca */}
         <Link
           to={`/productos/${product.IDProducto}`}
-          className="block rounded-xl bg-slate-100 dark:bg-[#0D1525] border border-slate-200/70 dark:border-[#1E2D4A] p-6 text-center group-hover:bg-sky-50/60 dark:group-hover:bg-[#13203B] transition-colors"
+          className="block rounded-xl overflow-hidden bg-slate-100 dark:bg-[#0D1525] border border-slate-200/70 dark:border-[#1E2D4A] group-hover:border-[#0A2259]/30 transition-all"
         >
-          <div className="w-12 h-12 mx-auto rounded-2xl bg-[#0A2259]/10 dark:bg-white/10 text-[#0A2259] dark:text-white flex items-center justify-center font-extrabold text-lg">
-            {product.NombreProducto.slice(0, 2).toUpperCase()}
-          </div>
-          <p className="mt-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 inline-flex items-center gap-1">
-            <Layers className="w-3.5 h-3.5 text-[#E31E24]" />
-            {product.TotalVariantesActivas}{' '}
-            {product.TotalVariantesActivas === 1 ? 'variante' : 'variantes'}
-          </p>
+          {product.ImagenPortada ? (
+            <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100 dark:bg-[#0D1525]">
+              <img
+                src={product.ImagenPortada}
+                alt={product.NombreProducto}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+              />
+              <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-black/60 backdrop-blur-xs text-[10px] font-semibold text-white inline-flex items-center gap-1">
+                <Layers className="w-3 h-3 text-[#E31E24]" />
+                {product.TotalVariantesActivas}{' '}
+                {product.TotalVariantesActivas === 1 ? 'var.' : 'vars.'}
+              </div>
+            </div>
+          ) : (
+            <div className="p-6 text-center group-hover:bg-sky-50/60 dark:group-hover:bg-[#13203B] transition-colors">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-[#0A2259]/10 dark:bg-white/10 text-[#0A2259] dark:text-white flex items-center justify-center font-extrabold text-lg">
+                {product.NombreProducto.slice(0, 2).toUpperCase()}
+              </div>
+              <p className="mt-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 inline-flex items-center gap-1">
+                <Layers className="w-3.5 h-3.5 text-[#E31E24]" />
+                {product.TotalVariantesActivas}{' '}
+                {product.TotalVariantesActivas === 1 ? 'variante' : 'variantes'}
+              </p>
+            </div>
+          )}
         </Link>
 
         {/* Título y descripción */}
