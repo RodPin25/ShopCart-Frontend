@@ -214,12 +214,19 @@ export function AdminCatalogPage() {
         });
         setFeedback({ type: 'success', message: 'Producto actualizado correctamente.' });
       } else {
-        await createProduct({
+        const createdProduct = await createProduct({
           idCategoria: values.idCategoria,
           nombreProducto: values.nombreProducto.trim(),
           descripcion: values.descripcion?.trim() || undefined,
         });
-        setFeedback({ type: 'success', message: 'Producto creado exitosamente.' });
+        setFeedback({
+          type: 'success',
+          message: 'Producto creado exitosamente. Ahora añade su primera variante (SKU).',
+        });
+        if (createdProduct && createdProduct.IDProducto) {
+          setSelectedProductIdForDetail(createdProduct.IDProducto);
+          handleOpenVariantModal();
+        }
       }
       productModal.close();
     } catch (err) {
@@ -293,7 +300,7 @@ export function AdminCatalogPage() {
             sku: values.sku.trim(),
             nombreVariante: values.nombreVariante.trim(),
             precio: values.precio,
-            stockInicial: values.stockInicial,
+            stockInicial: values.stockInicial ?? 0,
           },
         });
         setFeedback({ type: 'success', message: 'Nueva variante creada en el producto.' });

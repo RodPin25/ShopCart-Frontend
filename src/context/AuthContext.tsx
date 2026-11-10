@@ -95,10 +95,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void authService
       .getMe()
-      .then((profileData) => {
+      .then(async (profileData) => {
         if (!isMounted) return;
         setUser(profileData.usuario);
         writeCachedUser(profileData.usuario);
+
+        // Si el rol en la base de datos difiere del rol en el JWT actual, rotar tokens
+        try {
+          const parts = accessToken.split('.');
+          if (parts[1]) {
+            const payload = JSON.parse(atob(parts[1])) as { idRol?: number };
+            if (payload.idRol && payload.idRol !== profileData.usuario.IDRol) {
+              const rotated = await authService.refresh();
+              tokenStorage.setTokens(rotated.accessToken, rotated.refreshToken);
+            }
+          }
+        } catch {
+          // Ignorar fallo de auto-rotación silencioso si el refresh token expira
+        }
       })
       .catch(() => {
         if (!isMounted) return;
